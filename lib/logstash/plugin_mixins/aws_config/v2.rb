@@ -52,6 +52,9 @@ module LogStash::PluginMixins::AwsConfig::V2
                    Aws::Credentials.new(credentials_opts[:access_key_id],
                                         credentials_opts[:secret_access_key],
                                         credentials_opts[:session_token])
+
+                 elsif (@role_arn = ENV['AWS_ROLE_ARN']) && (@token_file = ENV['AWS_WEB_IDENTITY_TOKEN_FILE'])
+                   assume_role_with_web_identity
                  elsif @role_arn
                    assume_role
                  end
@@ -62,6 +65,15 @@ module LogStash::PluginMixins::AwsConfig::V2
     Aws::AssumeRoleCredentials.new(
       :client => Aws::STS::Client.new(:region => @region),
       :role_arn => @role_arn,
+      :role_session_name => @role_session_name
+    )
+  end
+
+  def assume_role_with_web_identity
+    Aws::AssumeRoleWebIdentityCredentials.new(
+      :client => Aws::STS::Client.new(:region => @region),
+      :role_arn => @role_arn,
+      :web_identity_token_file => @token_file,
       :role_session_name => @role_session_name
     )
   end
